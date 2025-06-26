@@ -1328,30 +1328,12 @@ impl LangString {
     }
 }
 
-trait WriteSpec {
-    fn reserve_spec(&mut self, additional: usize);
-}
-
-impl<W: fmt::Write> WriteSpec for W {
-    #[inline]
-    default fn reserve_spec(&mut self, _additional: usize) {}
-}
-
-impl<'a> WriteSpec for &'a mut String {
-    #[inline]
-    fn reserve_spec(&mut self, additional: usize) {
-        self.reserve(additional);
-    }
-}
-
 impl<'a> Markdown<'a> {
-    pub fn write_into(self, mut f: impl fmt::Write) -> fmt::Result {
+    pub fn write_into(self, f: impl fmt::Write) -> fmt::Result {
         // This is actually common enough to special-case
         if self.content.is_empty() {
             return Ok(());
         }
-
-        f.reserve_spec(self.content.len() * 3 / 2);
 
         html::write_html_fmt(f, self.into_iter())
     }
@@ -1491,8 +1473,6 @@ impl MarkdownItemInfo<'_> {
             Event::Html(text) | Event::InlineHtml(text) => (Event::Text(text), event.1),
             _ => event,
         });
-
-        f.reserve_spec(md.len() * 3 / 2);
 
         ids.handle_footnotes(|ids, existing_footnotes| {
             let p = HeadingLinks::new(p, None, ids, HeadingOffset::H1);
